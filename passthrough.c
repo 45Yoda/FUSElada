@@ -49,6 +49,8 @@
 #include <sys/xattr.h>
 #endif
 
+char *password;
+
 static void *xmp_init(struct fuse_conn_info *conn,
 		      struct fuse_config *cfg)
 {
@@ -325,69 +327,42 @@ char *sendPass(char *mail) {
         password[i] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"[random() % 62];    
     }
 	
-	if (fork() == 0) {
-
     char* message = malloc(100);
     strcpy(message,"Insert this password to access the system file:\n");
     strcat(message, password);
-   
-	int fd[2];
-	pipe(fd);
-
-	dup2(fd[0], 0);
-
-	write(fd[1], message, strlen(message));
-	close(fd[1]);
-
-	//system("mail -s "Password" grupo16fusesec@gmail.com");
-	char *cmd = "mail";
-	char *argv[5];
-	argv[0] = "mail";
-	argv[1] = "-s";
-	argv[2] = "\"Password\"";
-	argv[3] = mail;
-	argv[4] = NULL;
-
-	execvp(cmd, argv);
-}
+	char m[100]="mail -s \"Password\" ";
+	strcat(m,mail);
+	system(m);
+	
 	return password;
 }
 
 
 static int xmp_open(const char *path, struct fuse_file_info *fi)
 {
-	int res;
-	char mail[50],pass[5];
-	int fd[2];
-	pipe(fd);
+    int fd[2];
+    pipe(fd);
 
-	dup2(fd[0],0);
-	dup2(fd[1],1);
+	if (fork() == 0) {
+		dup2(fd[1],1);
+		system("answer=$(zenity --entry --text=\"Code\" --title=\"Insert your code:\"); echo $answer;");
+		
+	exit(0);
+}
+	char code[5];
+	read(fd[0],code,5);
+	char * scode = strtok(mail, "\n");
 
-	system("answer=$(zenity --entry --title=\"Write your e-mail\"); echo $answer;");
-    read(0,mail,50);
-    
-   int r = checkMail(mail);
-   if (r!=0) return -errno;;
+	if (strcmp(scode,password)!=0) return -errno;
 	
-   char* password = sendPass(mail);
-	pipe(fd);
+	int res;
 
-	dup2(fd[0],0);
-	dup2(fd[1],1);
-
-	system("answer=$(zenity --entry --title=\"Write your code\"); echo $answer;");
-	read(fd[0], pass,5);
-
-	if (strcmp(pass,password)!=0) return -errno;
-	else {
 	res = open(path, fi->flags);
 	if (res == -1)
 		return -errno;
 
 	fi->fh = res;
 	return 0;
-}
 }
 
 static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
@@ -612,8 +587,103 @@ static struct fuse_operations xmp_oper = {
 #endif
 };
 
+int checkMail(char *mail) {
+	FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+	fp = fopen("myfile.txt", "r");
+	if (fp == NULL)
+        exit(-1);
+
+	int n=-1;
+
+	while(read = getline(&line, &len, fp) != -1) {
+		line[strcspn(line, "\r\n")] = 0;
+  		if(strcmp(line, mail)==0) {
+    		n=1;
+    		break;
+ 	 }
+	}
+	if (n==1) {
+		system("zenity --info --text=\"A Code was sent to your e-mail\";");
+		fclose(fp);
+		return 0;
+	}
+	
+	else {
+		system("zenity --error --text=\"No access granted!\";");f
+		close(fp);
+		return 1;}
+
+}
+
+char *sendPass(char *mail) {
+	int i, length = 5;
+	char *password = malloc(length);
+	srand(time(NULL));
+    for(i = 0; i < length; i++) {
+        password[i] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"[random() % 62];    
+    }
+	
+	if (fork() == 0) {
+
+    char* message = malloc(200);
+   	strcpy(message,"To: ");
+    strcat(message,mail);
+    strcat(message,"\nSubject: Code\n");
+    strcat(message,"Insert this code to have acess to the files:\n ");
+    strcat(message,password);
+    strcat(message,"\n");
+
+	int fd[2];
+	pipe(fd);
+	dup2(fd[0], 0);
+
+	write(fd[1], message, strlen(message));
+	close(fd[1]);
+
+	char* final = malloc(100);
+	strcpy(final,"/usr/sbin/sendmail -t -F \"Code\"");
+	system(final);
+
+	/*char *cmd = "/usr/sbin/sendmail";
+	char *argv[5];
+	argv[0] = "sendmail";
+	argv[1] = "-t";
+	argv[2] = "-F";
+	argv[3] = "\"Code\"";
+	argv[4] = NULL;
+
+	execvp(cmd, argv);*/
+	exit(0);
+}
+	return password;
+}
+
 int main(int argc, char *argv[])
 {
+	char mail[50],pass[5];
+
+	int fd[2],i[2];
+	pipe(fd);
+	i[0]=dup(0);
+	i[1]=dup(1);
+	dup2(fd[0],0);
+	dup2(fd[1],1);
+   	system("answer=$(zenity --entry --text=\"E-mail\" --title=\"Write your e-mail\"); echo $answer;");
+	close(fd[1]);
+	read(0,mail,50);
+	char * smail = strtok(mail, "\n");
+	
+	dup2(i[0],0);
+	dup2(i[1],1);
+
+	int r = checkMail(smail);
+	if (r!=0) return 0;
+
+	password = sendPass(smail);
+
 	umask(0);
 	return fuse_main(argc, argv, &xmp_oper, NULL);
 }

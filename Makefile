@@ -13,10 +13,10 @@ compile:
 	firefox https://mail.google.com/mail/
 	cd fuse-3.4.1/example/ &
 	gcc -Wall passthrough.c `pkg-config fuse3 --cflags --libs` -o passthrough
-	./passthrough -o allow_other /home/stifler55/Desktop/teste/
+	sudo ./passthrough -o allow_other /home/stifler55/Desktop/teste2/
 
 acess:
 	cat fuse-3.4.1/build/example/passthrough@exe/passthrough
 
 clean:
-	rm -rf fuse-3.4.1
+	rm -rf fuse-3.4.1 passthrough
