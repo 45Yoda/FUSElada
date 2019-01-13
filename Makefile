@@ -1,8 +1,6 @@
  
 
 setup: 
-	sudo apt-get install mailutils
-	sudo apt-get install postfix
 	tar xf fuse-3.4.1.tar.xz
 	cp passthrough.c fuse-3.4.1/example/
 	mkdir fuse-3.4.1/build
