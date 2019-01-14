@@ -305,8 +305,9 @@ static int xmp_open(const char *path, struct fuse_file_info *fi)
 		dup2(fd[1],1);
 		system("answer=$(zenity --entry --timeout=30 --text=\"Code\" --title=\"Insert your code:\"); echo $answer;");
 		
-	exit(0);
-}
+		exit(0);
+	}
+	
 	char code[5];
 	read(fd[0],code,5);
 	char * scode = strtok(code, "\n");
@@ -557,6 +558,7 @@ int checkMail(char *mail) {
     size_t len = 0;
     ssize_t read;
 	fp = fopen("myfile.txt", "r");
+	
 	if (fp == NULL)
         exit(-1);
 
@@ -567,8 +569,9 @@ int checkMail(char *mail) {
   		if(strcmp(line, mail)==0) {
     		n=1;
     		break;
- 	 }
+ 		}
 	}
+
 	if (n==1) {
 		system("zenity --info --text=\"A Code was sent to your e-mail\";");
 		fclose(fp);
@@ -578,7 +581,8 @@ int checkMail(char *mail) {
 	else {
 		system("zenity --error --text=\"No access granted!\";");
 		close(fp);
-		return 1;}
+		return 1;
+	}
 
 }
 
@@ -586,7 +590,8 @@ char *sendPass(char *mail) {
 	int i, length = 5;
 	char *password = malloc(length);
 	srand(time(NULL));
-    for(i = 0; i < length; i++) {
+    
+	for(i = 0; i < length; i++) {
         password[i] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"[random() % 62];    
     }
 	
@@ -594,36 +599,28 @@ char *sendPass(char *mail) {
 
 	if (fork() == 0) {
 
-    char* message = malloc(200);
-   	strcpy(message,"To: ");
-    strcat(message,mail);
-    strcat(message,"\nSubject: Code\n");
-    strcat(message,"\nInsert this code to have access to the files:\n ");
-    strcat(message,password);
-    strcat(message,"\n");
+    	char* message = malloc(200);
+   		strcpy(message,"To: ");
+    	strcat(message,mail);
+    	strcat(message,"\nSubject: Code\n");
+    	strcat(message,"\nInsert this code to have access to the files:\n ");
+    	strcat(message,password);
+    	strcat(message,"\n");
 
-	int f[2];
-	pipe(f);
-	dup2(f[0], 0);
+		int f[2];
+		pipe(f);
+		dup2(f[0], 0);
 
-	write(f[1], message, strlen(message));
-	close(f[1]);
+		write(f[1], message, strlen(message));
+		close(f[1]);
 
-	char* final = malloc(100);
-	strcpy(final,"/usr/sbin/sendmail -t -F \"Code\"");
-	system(final);
+		char* final = malloc(100);
+		strcpy(final,"/usr/sbin/sendmail -t -F \"Code\"");
+		system(final);
 
-	/*char *cmd = "/usr/sbin/sendmail";
-	char *argv[5];
-	argv[0] = "sendmail";
-	argv[1] = "-t";
-	argv[2] = "-F";
-	argv[3] = "\"Code\"";
-	argv[4] = NULL;
+		exit(0);
+	}
 
-	execvp(cmd, argv);*/
-	exit(0);
-}
 	return password;
 }
 

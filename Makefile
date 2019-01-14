@@ -1,7 +1,7 @@
  
 
 setup: 
-	sudo apt-get install ssmtp
+	sudo cp ssmtp.conf /etc/ssmtp/
 	tar xf fuse-3.4.1.tar.xz
 	cp passthrough.c fuse-3.4.1/example/
 	mkdir fuse-3.4.1/build
