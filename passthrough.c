@@ -36,6 +36,7 @@
 #define _XOPEN_SOURCE 700
 #endif
 
+#include <stdlib.h>
 #include <fuse.h>
 #include <stdio.h>
 #include <string.h>
@@ -310,7 +311,14 @@ static int xmp_open(const char *path, struct fuse_file_info *fi)
 	read(fd[0],code,5);
 	char * scode = strtok(code, "\n");
 
-	if (strcmp(scode,password)!=0) return -errno;
+
+	password[5] = 0;
+	scode[5] = 0;
+
+	if (strcmp(scode,password)!=0){
+		system("answer=$(zenity --error --text=\"Acesso negado!\");");
+		return -errno;
+	} 
 	int res;
 
 	res = open(path, fi->flags);
@@ -582,6 +590,8 @@ char *sendPass(char *mail) {
         password[i] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"[random() % 62];    
     }
 	
+	password[length] = 0;
+
 	if (fork() == 0) {
 
     char* message = malloc(200);
@@ -619,7 +629,7 @@ char *sendPass(char *mail) {
 
 int main(int argc, char *argv[])
 {
-	char mail[50],pass[5];
+	char mail[50];
 
 	int fd[2],i[2];
 	pipe(fd);
