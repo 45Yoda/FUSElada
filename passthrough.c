@@ -303,7 +303,7 @@ static int xmp_open(const char *path, struct fuse_file_info *fi)
 
 	if (fork() == 0) {
 		dup2(fd[1],1);
-		system("answer=$(zenity --entry --text=\"Code\" --title=\"Insert your code:\"); echo $answer;");
+		system("answer=$(zenity --entry --timeout=30 --text=\"Code\" --title=\"Insert your code:\"); echo $answer;");
 		
 	exit(0);
 }
@@ -316,7 +316,7 @@ static int xmp_open(const char *path, struct fuse_file_info *fi)
 	scode[5] = 0;
 
 	if (strcmp(scode,password)!=0){
-		system("answer=$(zenity --error --text=\"Acesso negado!\");");
+		system("answer=$(zenity --error --text=\"Access denied!\");");
 		return -errno;
 	} 
 	int res;
