@@ -13,8 +13,8 @@ compile:
 	gcc -Wall passthrough.c `pkg-config fuse3 --cflags --libs` -o passthrough
 	sudo ./passthrough -o allow_other -f fuse-3.4.1/build/example/50d858e@@passthrough@exe
 
-acess:
-	cat fuse-3.4.1/build/example/passthrough@exe/passthrough
-
 clean:
 	rm -rf fuse-3.4.1 passthrough
+
+fix:
+	sudo umount -f fuse-3.4.1/build/example/50d858e@@passthrough@exe
